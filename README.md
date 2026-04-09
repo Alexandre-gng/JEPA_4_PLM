@@ -34,6 +34,12 @@ Cette formulation apporte plusieurs avantages:
 - reduction du biais vers des details de reconstruction peu utiles
 - meilleur alignement avec les objectifs de representation en biologie computationnelle
 
+### Schéma général JEPA appliqué aux protéines
+
+![Architecture générale JEPA pour protéines](img/general_archi.png)
+
+*Ce schéma illustre le flux JEPA: la séquence partiellement masquée est encodée par le context encoder, le predictor estime les vecteurs des acides aminés manquants, puis la loss compare ces prédictions à des représentations cibles produites par le target encoder sur la séquence complète.*
+
 ## Principe des Protein Language Models
 
 Les PLM apprennent une fonction $f(seq)$ qui transforme une sequence d'acides amines en vecteurs latents riches. Ces vecteurs peuvent ensuite etre utilises pour:
