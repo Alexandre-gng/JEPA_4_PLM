@@ -1,0 +1,41 @@
+/!\ J'ai un repo (à la légalité contestable) qui contient pleins d'articles
+hésitez pas à demander l'accès
+
+
+
+
+TODO:
+- consituer une bdd de séquence protéiques (UniRef50)
+    => Stocker tout dans troix txt ? (test, train et val)
+    => viser seulement quelques dizaines de milliers de séquences
+    => Déterminer la limite max de longueur des protéines
+
+
+- Monter une architecture d'Encodeur
+    => Etudier les équivalents (ESM2, ProtBert, ESM-IF1...) et
+    déterminer quelle archi est la meilleure
+    => 
+
+
+- Monter une architecture de Positionnal Encodeur
+    => "Learned Absolute Positional Embeddings"
+    => Transformer avec auto-attention (cv ESM-1b), il apprend
+    des vecteurs de représentation positionnel pour chaque acide 
+    aminée
+
+
+- Choisir une loss function
+    => HYPER IMPORTANT: SIGReg vs WeakSIGReg vs VICReg ? Checker parmi 
+    les articles et choisir le plus adapté
+    => L'implémenter
+
+
+- trouver une manière d'évaluer le PLM
+    => S'est il effondré ?
+        => checker variance des embeddings
+    
+    => Etude de comparaison des vecteurs par distance cosinus ?
+        => Si tous les embeddings se ressemblent alors effondrement
+
+    => PCA pour projeter les représentations des 20 acides aminées en 2d
+    et voir si elles sont proches ?
