@@ -8,10 +8,11 @@ TODO:
 - consituer une bdd de séquence protéiques (UniRef50)
     => Stocker tout dans troix txt ? (test, train et val)
     => viser seulement quelques dizaines de milliers de séquences
-    => Déterminer la limite max de longueur des protéines
+    => Déterminer la limite max de longueur des protéines pour le projet
 
 
 - Monter une architecture d'Encodeur
+    => Commencer par un encodeur simple (MLP ou Convol ou équivalent ?)
     => Etudier les équivalents (ESM2, ProtBert, ESM-IF1...) et
     déterminer quelle archi est la meilleure
     => 
@@ -22,12 +23,13 @@ TODO:
     => Transformer avec auto-attention (cv ESM-1b), il apprend
     des vecteurs de représentation positionnel pour chaque acide 
     aminée
+    => Peut être qu'un petit MLP fera l'affaire au début
 
 
 - Choisir une loss function
     => HYPER IMPORTANT: SIGReg vs WeakSIGReg vs VICReg ? Checker parmi 
     les articles et choisir le plus adapté
-    => L'implémenter
+    => Le plus simple à implémenter est le VICReg, ça peut être un bon début
 
 
 - trouver une manière d'évaluer le PLM
