@@ -99,3 +99,21 @@ de l'AA.
 ============ Architecture ==============
 - 2 Encodeurs liés par SIGReg ou WeakSIGReg
 - 1 Predictor (decodeur)
+
+
+
+Questions:
+- Quel PLM comme encodeur utiliser ?
+    => ESM2 8M ?
+    => Une variante type ProtBert ?
+
+- Quel Regularisation utiliser ?
+    => VICReg, SIGReg, WeakSIGReg ?
+
+- Quel predicteur utiliser ?
+    - MLP ?
+    - Mini transformer (cross-attn, masked-attn ..) ?
+
+- Quelles données utiliser pour le fine-tuning ?
+    => UniRef50 ?
+    => ?

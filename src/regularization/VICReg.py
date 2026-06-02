@@ -4,9 +4,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# import data loader
-from torch.utils.data import DataLoader
-
 from dataclasses import dataclass
 
 

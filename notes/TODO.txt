@@ -41,3 +41,10 @@ TODO:
 
     => PCA pour projeter les représentations des 20 acides aminées en 2d
     et voir si elles sont proches ?
+
+
+
+
+
+
+1: Utiliser Huggingface pour télécharger les 500 millions premières prot de train

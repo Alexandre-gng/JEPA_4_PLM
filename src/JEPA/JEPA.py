@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from dataclasses import dataclass
 
+from predictor.MultiHeadAttn import MultiHeadAttention
+from predictor.CrossAttn import CrossAttention
 
 @dataclass
 class JEPAConfig:
@@ -24,11 +26,7 @@ class JEPA(nn.Module):
         self.tau = tau
 
         # enc(x) => Used to encode the entire protein sequence
-        self.context_encoder = nn.Sequential(
-            nn.Conv2d(input_dim, enc_hidden_dim, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(enc_hidden_dim, latent_dim, kernel_size=3, stride=1, padding=1)
-        )
+        self.context_encoder = nn.Sequential(        )
 
         # masked_enc(x) => used to encode the incomplete protein sequence (i.e. the masked sequence)
         self.target_encoder = nn.Sequential(
