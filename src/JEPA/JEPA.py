@@ -5,6 +5,9 @@ from dataclasses import dataclass
 
 from predictor.MultiHeadAttn import MultiHeadAttention
 from predictor.CrossAttn import CrossAttention
+from predictor.RoPE import RotaryPositionalEmbedding
+
+from encoder.ESM2_8M import ESM2_8M
 
 @dataclass
 class JEPAConfig:
@@ -21,47 +24,50 @@ class JEPAConfig:
 
 
 class JEPA(nn.Module):
-    def __init__(self, input_dim, enc_hidden_dim: int = 64, latent_dim: int = 128, output_dim: int = 128, tau: float = 0.99):
+    """
+    JEPA (Joint Embedding Predictive Architecture) for protein sequences.
+    - enc(x) => Used to encode the entire protein sequence
+    - masked_enc(x) => used to encode the incomplete protein sequence (i.e. the masked sequence)
+    - Dec(z) => Used to decode the latent representation (vector) back to the real data
+    """
+    def __init__(self, latent_dim: int = 320, output_dim: int = 320, tau: float = 0.99):
         super(JEPA, self).__init__()
         self.tau = tau
 
         # enc(x) => Used to encode the entire protein sequence
-        self.context_encoder = nn.Sequential(        )
+        self.context_encoder = ESM2_8M()
 
         # masked_enc(x) => used to encode the incomplete protein sequence (i.e. the masked sequence)
-        self.target_encoder = nn.Sequential(
-            nn.Conv2d(input_dim, enc_hidden_dim, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(enc_hidden_dim, latent_dim, kernel_size=3, stride=1, padding=1)
-        )
+        self.target_encoder = ESM2_8M()
 
+        # Keep the target encoder as an EMA copy of the context encoder.
+        self.target_encoder.load_state_dict(self.context_encoder.state_dict())
+        for parameter in self.target_encoder.parameters():
+            parameter.requires_grad = False
+        print("CCC latent_dim: ", latent_dim)
         # Dec(z) => Used to decode the latent representation (vector) back to the real data
-        self.predictor = nn.Sequential(
-            nn.Linear(latent_dim, latent_dim),
-            nn.ReLU(),
-            nn.Linear(latent_dim, output_dim)
-        )
+        self.predictor = MultiHeadAttention(num_heads=1, d_model=latent_dim)
+
     
+    @torch.no_grad()
     def update_target_encoder(self):
-        """Update the target encoder's weights with the EMA
-        """
         for param_context, param_target in zip(self.context_encoder.parameters(), self.target_encoder.parameters()):
-            param_target.data = self.tau * param_target.data + (1 - self.tau) * param_context.data
+            param_target.data.mul_(self.tau).add_(param_context.data, alpha=1 - self.tau)
+
 
     def forward(self, full_sequence, sequence):
 
-        # Encode the full sequence and keep local 8x8 latent representations
-        # enc(full_sequence): (B, C, 8, 8) -> (B, 64, C)
-        target_latent_map = self.context_encoder(full_sequence)
-        target_latent = target_latent_map.flatten(2).transpose(1, 2)
+        # Encode the full sequence
+        target_latent = self.context_encoder(full_sequence)
 
-        # Encode the masked sequence and keep local 8x8 latent representations
-        # masked_enc(masked_sequence): (B, C, 8, 8) -> (B, 64, C)
-        masked_latent_map = self.target_encoder(sequence)
-        masked_latent = masked_latent_map.flatten(2).transpose(1, 2)
+        # Encode the masked sequence
+        masked_latent = self.target_encoder(sequence)
 
         # Predict each local latent representation from masked local latents
-        # pred(masked_latent): (B, 64, C) -> (B, 64, output_dim)
-        context_latent = self.predictor(masked_latent)
+        context_latent = self.predictor(masked_latent, masked_latent, masked_latent)
         
         return context_latent, target_latent
+        # `context_latent` and `target_latent` are the latent representations of the input data
+        # obtained from different encoding processes within the JEPA model.
+        
+    

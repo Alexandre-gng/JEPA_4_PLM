@@ -1,4 +1,13 @@
 /venv
 /data
 sketchnote.png
+
 dataset.py
+test.py
+*.fasta
+
+.vscode
+.cpython-310.pyc
+__pycache__
+__init__.py
+

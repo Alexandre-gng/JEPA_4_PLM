@@ -21,6 +21,7 @@ class RotaryPositionalEmbedding(nn.Module):
             for j in range(d_model):
                 self.positional_embedding[i, j] = torch.cos(i * j * 0.01)
 
+
     def forward(self, x):
         """
         Args:
