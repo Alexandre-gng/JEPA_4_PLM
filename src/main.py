@@ -1,48 +1,73 @@
+import os
+from pathlib import Path
+
+import torch
+from torch.utils.data import DataLoader
+
 from JEPA.JEPA import JEPA
-
-from dataset.data_func import mask_sequence
-
-from JEPA.train_JEPA import train_jepa, compute_loss
-
-
-jepa = JEPA(latent_dim=320, output_dim=320, tau=0.99)
-print("JEPA model initialized !")
-
-# Loading dataset
-dataset_path = "src/dataset/UniRef50/uniref50_half.fasta"
-with open(dataset_path, "r") as f:
-    sequences = []
-    current_sequence = ""
-    for line in f:
-        if line.startswith(">"):
-            if current_sequence:
-                sequences.append(current_sequence)
-                current_sequence = ""
-        else:
-            current_sequence += line.strip()
-    if current_sequence:
-        sequences.append(current_sequence)
-
-
-masked_sequences = [mask_sequence(seq) for seq in sequences]
-print(f"Nombre de séquences masquées : {len(masked_sequences)}")
-print(f"Exemple de séquence masquée : {masked_sequences[0]}")
-
-print(f"Nombre de séquences chargées : {len(sequences)}")
-
-
-context_latent, target_latent = train_jepa(jepa, sequences[0], masked_sequences[0])
-
-print("JEPA forward pass completed !")
-print(f"Context latent shape: {context_latent.shape}")
-print(f"Target latent shape: {target_latent.shape}")
-print(f"Context latent example: {context_latent[0][:5]}")
-print(f"Target latent example: {target_latent[0][:5]}")
-
+from JEPA.train_JEPA import train_jepa
 from regularization.VICReg import VICRegLoss
+from dataset.ProteinDataset import ProteinDataset
 
-computed_loss = compute_loss(VICRegLoss(), context_latent, target_latent)
-print(f"Computed loss: {computed_loss}")
+TRAIN_PATH = 'dataset/train'
+VAL_PATH = 'dataset/validation'
+TEST_PATH = 'dataset/test'
+MODEL_SAVE_PATH = 'saved_models/jepa_model.pt'
+
+
+def collate_sequences(batch):
+    full_sequences, masked_sequences = zip(*batch)
+    return list(full_sequences), list(masked_sequences)
+
+
+def main():
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f'Using device: {device}')
+
+    train_dataset = ProteinDataset(root_path=TRAIN_PATH, masked_ratio=0.15, n_sequences=10000)
+    val_dataset = ProteinDataset(root_path=VAL_PATH, masked_ratio=0.15)
+
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=16,
+        shuffle=True,
+        collate_fn=collate_sequences,
+        num_workers=0,
+        drop_last=False,
+    )
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=16,
+        shuffle=False,
+        collate_fn=collate_sequences,
+        num_workers=0,
+    )
+
+    model = JEPA(latent_dim=320, output_dim=320, tau=0.99).to(device)
+    loss_fn = VICRegLoss(mu=1.0, lambda_=1.0, nu=1.0).to(device)
+    optimizer = torch.optim.AdamW(
+        list(model.context_encoder.parameters()) + list(model.predictor.parameters()),
+        lr=1e-4,
+    )
+
+    print('JEPA model initialized and datasets loaded.')
+    jepa = train_jepa(
+        jepa=model,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        loss_fn=loss_fn,
+        optimizer=optimizer,
+        device=device,
+        num_epochs=5,
+    )
+    
+    os.makedirs(Path(MODEL_SAVE_PATH).parent, exist_ok=True)
+    torch.save(jepa.state_dict(), MODEL_SAVE_PATH)
+    print(f'Model saved to {MODEL_SAVE_PATH}')
+
+
+if __name__ == '__main__':
+    main()
 
 
 

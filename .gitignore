@@ -1,5 +1,6 @@
 /venv
-/data
+/dataset
+/notes
 sketchnote.png
 
 dataset.py
