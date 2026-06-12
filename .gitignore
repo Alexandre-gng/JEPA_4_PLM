@@ -6,9 +6,9 @@ sketchnote.png
 dataset.py
 test.py
 *.fasta
+*.pt
 
 .vscode
 .cpython-310.pyc
 __pycache__
 __init__.py
-
