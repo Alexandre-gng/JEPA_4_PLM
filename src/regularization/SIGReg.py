@@ -85,17 +85,29 @@ class SIGRegLoss(nn.Module):
         return loss.mean()
     
 
-    def forward(self, z):
+    def forward(self, z, z_prime):
         """
         Compute the SIGReg loss for the given feature representations.
 
         Args:
-            z: Tensor of shape (batch_size, feature_dim) representing the features from the model.
+            z: Tensor of shape (batch_size, feature_dim) representing the features from the first view.
+            z_prime: Tensor of shape (batch_size, feature_dim) representing the features from the second view.
         Returns:
             loss: Scalar tensor representing the SIGReg loss.
         """
+        # L_pred: L2 loss between the two views
+        prediction_loss = F.mse_loss(z, z_prime)
+
+        # check if crazy dim, if not, flatten to 2D
         if z.ndim > 2:
             z = z.reshape(-1, z.size(-1))
+        if z_prime.ndim > 2:
+            z_prime = z_prime.reshape(-1, z_prime.size(-1))
+
+        # Average L_SIGReg: SIGReg loss for both views
+        reg_loss = (self.sigreg_strong_loss(z) + self.sigreg_strong_loss(z_prime)) / 2.0
+    
+        # Final LeJEPA Loss
+        LeJepa_loss = (1 - self.lambda_) * prediction_loss + self.lambda_ * reg_loss
         
-        loss = self.sigreg_strong_loss(z)
-        return self.lambda_ * loss
+        return LeJepa_loss

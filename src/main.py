@@ -19,16 +19,16 @@ MODEL_SAVE_PATH = 'saved_models/jepa_model.pt'
 
 
 def collate_sequences(batch):
-    full_sequences, masked_sequences = zip(*batch)
-    return list(full_sequences), list(masked_sequences)
+    full_sequences, masked_sequences, name = zip(*batch)
+    return list(full_sequences), list(masked_sequences), list(name)
 
 
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
 
-    train_dataset = ProteinDataset(root_path=TRAIN_PATH, masked_ratio=0.15, n_sequences=10000)
-    val_dataset = ProteinDataset(root_path=VAL_PATH, masked_ratio=0.15)
+    train_dataset = ProteinDataset(root_path=TRAIN_PATH, masked_ratio=0.15, n_sequences=5)
+    val_dataset = ProteinDataset(root_path=VAL_PATH, masked_ratio=0.15, n_sequences=5)
     print("Datasets loaded. Sample size - Train: {}, Validation: {}".format(len(train_dataset), len(val_dataset)))
     train_loader = DataLoader(
         train_dataset,
@@ -38,6 +38,9 @@ def main():
         num_workers=0,
         drop_last=False,
     )
+    print(f"elements of train_loader: {len(train_loader)}")
+    # print the number of keys in the first batch of the train_loader
+    print(f"First batch keys: {train_loader.dataset[0]}")
     val_loader = DataLoader(
         val_dataset,
         batch_size=16,
@@ -49,8 +52,8 @@ def main():
     print('DataLoaders created.')
     model = JEPA(latent_dim=320, output_dim=320, tau=0.99).to(device)
     print('JEPA model created with latent_dim=320, output_dim=320, tau=0.99.')
-    loss_fn = SIGRegLoss(config=SIGRegLossConfig(lambda_=0.08, sketch_dim=64)).to(device)
-    print('SIGRegLoss initialized with lambda_=1.0 and sketch_dim=64.')
+    loss_fn = SIGRegLoss(config=SIGRegLossConfig(lambda_=0.15, sketch_dim=64)).to(device)
+    print('SIGRegLoss initialized with lambda_=0.15 and sketch_dim=64.')
 
     optimizer = torch.optim.AdamW(
         list(model.context_encoder.parameters()) + list(model.predictor.parameters()),

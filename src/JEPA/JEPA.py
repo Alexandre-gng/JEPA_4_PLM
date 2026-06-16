@@ -48,10 +48,12 @@ class JEPA(nn.Module):
 
         self.predictor = MultiHeadAttention(num_heads=1, d_model=self.latent_dim)
 
+
     @torch.no_grad()
     def update_target_encoder(self):
         for param_context, param_target in zip(self.context_encoder.parameters(), self.target_encoder.parameters()):
             param_target.data.mul_(self.tau).add_(param_context.data, alpha=1 - self.tau)
+
 
     def forward(self, full_sequence, sequence):
         target_latent = self.context_encoder(full_sequence)

@@ -25,6 +25,7 @@ class ProteinDataset(Dataset):
         self.sequences, self.prot_id = self._load_sequences(n_sequences)
         self.masked_sequences = [self.mask_sequence(seq, self.masked_ratio) for seq in self.sequences]
 
+
     def _load_sequences(self, n_sequences: int | None, max_seq_length: int = MAX_SEQ_LENGTH) -> tuple[list[str], list[str]]:
         """Load sequences from a CSV file or all CSV files in a directory, with optional limit on number of sequences."""
         if self.root_path.is_file():
@@ -61,7 +62,6 @@ class ProteinDataset(Dataset):
         masked_sequence = self.masked_sequences[idx]
         prot_id = self.prot_id[idx]
         return sequence, masked_sequence, prot_id
-
 
     def mask_sequence(self, sequence: str, mask_ratio: float = 0.15) -> str:
         sequence_chars = list(sequence)
