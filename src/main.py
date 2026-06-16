@@ -27,8 +27,8 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
 
-    train_dataset = ProteinDataset(root_path=TRAIN_PATH, masked_ratio=0.15, n_sequences=5)
-    val_dataset = ProteinDataset(root_path=VAL_PATH, masked_ratio=0.15, n_sequences=5)
+    train_dataset = ProteinDataset(root_path=TRAIN_PATH, masked_ratio=0.15, n_sequences=10000)
+    val_dataset = ProteinDataset(root_path=VAL_PATH, masked_ratio=0.15, n_sequences=1000)
     print("Datasets loaded. Sample size - Train: {}, Validation: {}".format(len(train_dataset), len(val_dataset)))
     train_loader = DataLoader(
         train_dataset,
