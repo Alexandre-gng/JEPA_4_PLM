@@ -1,14 +1,18 @@
 /venv
-/dataset
+/dataset/csv
 /notes
-sketchnote.png
+/latents
+/models
 
-dataset.py
-test.py
+
 *.fasta
-*.pt
+*.png
 
 .vscode
 .cpython-310.pyc
 __pycache__
+
 __init__.py
+dataset.py
+test.py
+test_dataset.pt

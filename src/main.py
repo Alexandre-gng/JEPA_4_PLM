@@ -12,9 +12,12 @@ from regularization.SIGReg import SIGRegLoss, SIGRegLossConfig
 
 from dataset.ProteinDataset import ProteinDataset
 
-TRAIN_PATH = 'dataset/train'
-VAL_PATH = 'dataset/validation'
-TEST_PATH = 'dataset/test'
+CSV_TRAIN_PATH = 'dataset/csv/train'
+CSV_VAL_PATH = 'dataset/csv/validation'
+CSV_TEST_PATH = 'dataset/csv/test'
+PT_TRAIN_PATH = 'dataset/pt_10k/train_dataset.pt'
+PT_VAL_PATH = 'dataset/pt_10k/val_dataset.pt'
+
 MODEL_SAVE_PATH = 'saved_models/jepa_model.pt'
 
 
@@ -26,9 +29,19 @@ def collate_sequences(batch):
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
+    
+    """
+    If a direct CSV import is needed
+    train_dataset = ProteinDataset(root_path=CSV_TRAIN_PATH, masked_ratio=0.15, n_sequences=10000)
+    val_dataset = ProteinDataset(root_path=CSV_VAL_PATH, masked_ratio=0.15, n_sequences=200)
+    """
 
-    train_dataset = ProteinDataset(root_path=TRAIN_PATH, masked_ratio=0.15, n_sequences=10000)
-    val_dataset = ProteinDataset(root_path=VAL_PATH, masked_ratio=0.15, n_sequences=200)
+    # pt file import
+    val_dataset = torch.load(PT_VAL_PATH, weights_only=False)
+    print(f"Validation dataset loaded with {len(val_dataset)} sequences.")
+    train_dataset = torch.load(PT_TRAIN_PATH, weights_only=False)
+    print(f"Train dataset loaded with {len(train_dataset)} sequences.")
+
     print("Datasets loaded. Sample size - Train: {}, Validation: {}".format(len(train_dataset), len(val_dataset)))
     train_loader = DataLoader(
         train_dataset,
