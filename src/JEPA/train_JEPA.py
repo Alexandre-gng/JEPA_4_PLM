@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import numpy as np
 
 import torch
@@ -5,6 +8,7 @@ from torch import optim
 from typing import Any
 
 from JEPA.JEPA import JEPA
+from src.main import MODEL_SAVE_PATH
 
 
 
@@ -222,6 +226,12 @@ def train_jepa(
 
         else:
             print(f'Epoch {epoch}/{num_epochs} - train_loss={train_loss:.6f}')
+        print('Saving model ...')
+        os.makedirs(Path(MODEL_SAVE_PATH).parent, exist_ok=True)
+        torch.save(jepa.state_dict(), MODEL_SAVE_PATH)
+        print(f'Model saved to {MODEL_SAVE_PATH}')
+
+
     return jepa
 
 
