@@ -14,13 +14,13 @@ TEST_PATH = 'dataset/test'
 print("Loading the model and running the test function on a single sequence...")
 # load the .pt file and run the test function on a single sequence
 jepa = JEPA(latent_dim=320, output_dim=320, tau=0.99)
-print("Loading the model from 'JEPA_10k.pt'...")
-jepa.load_state_dict(torch.load('JEPA_10k.pt', map_location=torch.device('cpu')))
+print("Loading the model from 'models/10k_SIGReg/jepa_model.pt'...")
+jepa.load_state_dict(torch.load('models/10k_SIGReg/jepa_model.pt', map_location=torch.device('cpu')))
 print("Model loaded successfully.")
 
 
 # === Test set loading ===
-test_dataset = ProteinDataset(root_path=TEST_PATH, masked_ratio=0.15, n_sequences=10)
+test_dataset = ProteinDataset(root_path=TEST_PATH, masked_ratio=0.15, n_sequences=200)
 print(f"Test dataset loaded with {len(test_dataset)} sequences.")
 # Savec the test dataset in a .pt file for later use
 torch.save(test_dataset, 'test_dataset.pt')
@@ -57,5 +57,5 @@ for i in range(len(test_dataset)):
 # results = test_jepa(jepa, test_loader, device=torch.device('cpu'))
 
 #save the dico as a .pt file
-torch.save(l_results, 'latents/JEPA_10k/cont_targ_lat_10.pt')
-print("Context and target latent representations saved to 'latents/JEPA_10k/cont_targ_lat_10.pt' respectively.")
+torch.save(l_results, 'latents/10k_SIGReg/cont_targ_lat_10k.pt')
+print("Context and target latent representations saved to 'latents/10k_SIGReg/cont_targ_lat_10k.pt' respectively.")

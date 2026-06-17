@@ -23,7 +23,7 @@ from dataclasses import dataclass
 @dataclass
 class SIGRegLossConfig:
     sketch_dim: int = 64
-    lambda_: float = 1.0
+    lambda_: float = 0.10
 
 
 class SIGRegLoss(nn.Module):

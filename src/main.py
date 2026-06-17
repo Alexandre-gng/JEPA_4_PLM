@@ -28,7 +28,7 @@ def main():
     print(f'Using device: {device}')
 
     train_dataset = ProteinDataset(root_path=TRAIN_PATH, masked_ratio=0.15, n_sequences=10000)
-    val_dataset = ProteinDataset(root_path=VAL_PATH, masked_ratio=0.15, n_sequences=1000)
+    val_dataset = ProteinDataset(root_path=VAL_PATH, masked_ratio=0.15, n_sequences=200)
     print("Datasets loaded. Sample size - Train: {}, Validation: {}".format(len(train_dataset), len(val_dataset)))
     train_loader = DataLoader(
         train_dataset,
@@ -52,15 +52,15 @@ def main():
     print('DataLoaders created.')
     model = JEPA(latent_dim=320, output_dim=320, tau=0.99).to(device)
     print('JEPA model created with latent_dim=320, output_dim=320, tau=0.99.')
-    loss_fn = SIGRegLoss(config=SIGRegLossConfig(lambda_=0.15, sketch_dim=64)).to(device)
-    print('SIGRegLoss initialized with lambda_=0.15 and sketch_dim=64.')
+    loss_fn = SIGRegLoss(config=SIGRegLossConfig(lambda_=0.07, sketch_dim=64)).to(device)
+    print('SIGRegLoss initialized with lambda_=0.07 and sketch_dim=64.')
 
     optimizer = torch.optim.AdamW(
         list(model.context_encoder.parameters()) + list(model.predictor.parameters()),
-        lr=1e-4,
+        lr=1e-3,
     )
 
-    print('AdamW optimizer created for context encoder and predictor with learning rate 1e-4.')
+    print('AdamW optimizer created for context encoder and predictor with learning rate 1e-3.')
     print('JEPA model initialized and datasets loaded.')
     jepa = train_jepa(
         jepa=model,
