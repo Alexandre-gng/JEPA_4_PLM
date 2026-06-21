@@ -7,6 +7,7 @@
 
 *.fasta
 *.png
+*.pt
 
 .vscode
 .cpython-310.pyc

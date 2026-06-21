@@ -12,13 +12,15 @@ from regularization.SIGReg import SIGRegLoss, SIGRegLossConfig
 
 from dataset.ProteinDataset import ProteinDataset
 
+
 CSV_TRAIN_PATH = 'dataset/csv/train'
 CSV_VAL_PATH = 'dataset/csv/validation'
 CSV_TEST_PATH = 'dataset/csv/test'
+
 PT_TRAIN_PATH = 'dataset/pt_10k/train_dataset.pt'
 PT_VAL_PATH = 'dataset/pt_10k/val_dataset.pt'
 
-MODEL_SAVE_PATH = 'saved_models/jepa_model.pt'
+MODEL_SAVE_PATH = 'saved_models/test_10.pt'
 
 
 def collate_sequences(batch):
@@ -30,22 +32,25 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
     
+    
+    # If a direct CSV import is needed
     """
-    If a direct CSV import is needed
-    train_dataset = ProteinDataset(root_path=CSV_TRAIN_PATH, masked_ratio=0.15, n_sequences=10000)
-    val_dataset = ProteinDataset(root_path=CSV_VAL_PATH, masked_ratio=0.15, n_sequences=200)
+    train_dataset = ProteinDataset(root_path=CSV_TRAIN_PATH, masked_ratio=0.15, n_sequences=10)
+    val_dataset = ProteinDataset(root_path=CSV_VAL_PATH, masked_ratio=0.15, n_sequences=10)
     """
 
     # pt file import
+    
     val_dataset = torch.load(PT_VAL_PATH, weights_only=False)
     print(f"Validation dataset loaded with {len(val_dataset)} sequences.")
     train_dataset = torch.load(PT_TRAIN_PATH, weights_only=False)
     print(f"Train dataset loaded with {len(train_dataset)} sequences.")
-
+    
+    
     print("Datasets loaded. Sample size - Train: {}, Validation: {}".format(len(train_dataset), len(val_dataset)))
     train_loader = DataLoader(
         train_dataset,
-        batch_size=16,
+        batch_size=32,
         shuffle=True,
         collate_fn=collate_sequences,
         num_workers=0,
@@ -56,17 +61,17 @@ def main():
     print(f"First batch keys: {train_loader.dataset[0]}")
     val_loader = DataLoader(
         val_dataset,
-        batch_size=16,
+        batch_size=32,
         shuffle=False,
         collate_fn=collate_sequences,
         num_workers=0,
     )
 
     print('DataLoaders created.')
-    model = JEPA(latent_dim=320, output_dim=320, tau=0.99).to(device)
-    print('JEPA model created with latent_dim=320, output_dim=320, tau=0.99.')
-    loss_fn = SIGRegLoss(config=SIGRegLossConfig(lambda_=0.07, sketch_dim=64)).to(device)
-    print('SIGRegLoss initialized with lambda_=0.07 and sketch_dim=64.')
+    model = JEPA(latent_dim=160, output_dim=320, tau=0.99).to(device)
+    print('JEPA model created with latent_dim=160, output_dim=320, tau=0.99.')
+    loss_fn = SIGRegLoss(config=SIGRegLossConfig(lambda_=0.10, sketch_dim=320)).to(device)
+    print('SIGRegLoss initialized with lambda_=0.10 and sketch_dim=320.')
 
     optimizer = torch.optim.AdamW(
         list(model.context_encoder.parameters()) + list(model.predictor.parameters()),
@@ -82,7 +87,7 @@ def main():
         loss_fn=loss_fn,
         optimizer=optimizer,
         device=device,
-        num_epochs=5,
+        num_epochs=30,
     )
     print('Training completed. Saving model...')
     os.makedirs(Path(MODEL_SAVE_PATH).parent, exist_ok=True)
@@ -92,4 +97,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

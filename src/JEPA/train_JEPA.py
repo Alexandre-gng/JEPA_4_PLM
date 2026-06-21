@@ -8,15 +8,14 @@ from torch import optim
 from typing import Any
 
 from JEPA.JEPA import JEPA
-from src.main import MODEL_SAVE_PATH
 
+MODEL_SAVE_PATH = 'saved_models/jepa_model.pt'
 
 
 def compute_loss(loss_fn: Any, predicted: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
     if hasattr(loss_fn, 'forward'):
         return loss_fn.forward(predicted, target)
     return loss_fn(predicted, target)
-
 
 
 def train_epoch(
@@ -195,7 +194,8 @@ def train_jepa(
     num_epochs: int = 10,
 ):
     """Train the JEPA model for a specified number of epochs, evaluating on the validation set after each epoch.
-    
+    It alos save the metrics of the validation set (cosine similarity, variance, dead dimensions, effective dimension) after each epoch.
+
     Args:
         jepa: The JEPA model to train.
         train_loader: DataLoader for the training set.
@@ -208,14 +208,40 @@ def train_jepa(
         The trained JEPA model after the specified number of epochs.
     """
 
+    metrics = {
+        "epoch": [],
+        "train_loss": [],
+        "val_loss": [],
+        "cosine_similarity_context_target": [],
+        "std_cosine_similarity_context_target": [],
+        "cosine_similarity_context": [],
+        "std_cosine_similarity_context": [],
+        "mean_variance_by_dimension": [],
+        "dead_dimensions": [],
+        "effective_dimension_80": [],
+        }
+    
     for epoch in range(1, num_epochs + 1):
         train_loss = train_epoch(jepa, train_loader, optimizer, loss_fn, device)
         val_loss = None
         if val_loader is not None:
+            # Computing validation loss and metrics
             val_loss, list_context_latent, list_target_latent = validate_epoch(jepa, val_loader, loss_fn, device)
             cossim_pairwise, std_cossim_pairwise = get_pairwise_cosine_similarity(list_context_latent)
             cossim_targ_cont, std_cossim_targ_cont = get_mean_cosine_similarity(list(zip(list_context_latent, list_target_latent)))
             variances, dead_dims, effective_dim_80 = get_var_by_dim(list_context_latent)
+            
+            # Saving the metrics in a dictionary for later analysis
+            metrics["epoch"].append(epoch)
+            metrics["train_loss"].append(train_loss)
+            metrics["val_loss"].append(val_loss)
+            metrics["cosine_similarity_context_target"].append(cossim_targ_cont)
+            metrics["std_cosine_similarity_context_target"].append(std_cossim_targ_cont)
+            metrics["cosine_similarity_context"].append(cossim_pairwise)
+            metrics["std_cosine_similarity_context"].append(std_cossim_pairwise)
+            metrics["mean_variance_by_dimension"].append(variances.mean())
+            metrics["dead_dimensions"].append(dead_dims)
+            metrics["effective_dimension_80"].append(effective_dim_80)
 
         if val_loss is not None:
             print(f'Epoch {epoch}/{num_epochs} - train_loss={train_loss:.6f} val_loss={val_loss:.6f} cosine_similarity between context and target latents={cossim_targ_cont:.6f} cosine_similarity between context latents={cossim_pairwise:.6f}')
@@ -230,8 +256,10 @@ def train_jepa(
         os.makedirs(Path(MODEL_SAVE_PATH).parent, exist_ok=True)
         torch.save(jepa.state_dict(), MODEL_SAVE_PATH)
         print(f'Model saved to {MODEL_SAVE_PATH}')
-
-
+    # Save the metrics dictionary as a .pt file for later analysis
+    metrics_save_path = Path(MODEL_SAVE_PATH).parent / 'training_metrics.pt'
+    torch.save(metrics, metrics_save_path)
+    print(f'Training metrics saved to {metrics_save_path}')
     return jepa
 
 
