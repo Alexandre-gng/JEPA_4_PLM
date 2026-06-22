@@ -68,8 +68,8 @@ def main():
     )
 
     print('DataLoaders created.')
-    model = JEPA(latent_dim=160, output_dim=320, tau=0.99).to(device)
-    print('JEPA model created with latent_dim=160, output_dim=320, tau=0.99.')
+    model = JEPA(latent_dim=160, output_dim=320, tau=0.0).to(device)
+    print('JEPA model created with latent_dim=160, output_dim=320, tau=0.0.')
     loss_fn = SIGRegLoss(config=SIGRegLossConfig(lambda_=0.10, sketch_dim=320)).to(device)
     print('SIGRegLoss initialized with lambda_=0.10 and sketch_dim=320.')
 
