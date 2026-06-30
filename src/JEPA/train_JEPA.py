@@ -39,7 +39,7 @@ def train_epoch(
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        jepa.update_target_encoder()
+        # jepa.update_target_encoder()
 
         batch_size = len(full_sequences)
         total_loss += loss.item() * batch_size

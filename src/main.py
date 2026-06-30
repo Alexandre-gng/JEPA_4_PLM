@@ -35,22 +35,20 @@ def main():
     
     # If a direct CSV import is needed
     """
-    train_dataset = ProteinDataset(root_path=CSV_TRAIN_PATH, masked_ratio=0.15, n_sequences=10)
-    val_dataset = ProteinDataset(root_path=CSV_VAL_PATH, masked_ratio=0.15, n_sequences=10)
-    """
-
-    # pt file import
+    train_dataset = ProteinDataset(root_path=CSV_TRAIN_PATH, masked_ratio=0.15, n_sequences=)
+    val_dataset = ProteinDataset(root_path=CSV_VAL_PATH, masked_ratio=0.15, n_sequences=3)
+    """ 
     
     val_dataset = torch.load(PT_VAL_PATH, weights_only=False)
     print(f"Validation dataset loaded with {len(val_dataset)} sequences.")
     train_dataset = torch.load(PT_TRAIN_PATH, weights_only=False)
     print(f"Train dataset loaded with {len(train_dataset)} sequences.")
-    
+   
     
     print("Datasets loaded. Sample size - Train: {}, Validation: {}".format(len(train_dataset), len(val_dataset)))
     train_loader = DataLoader(
         train_dataset,
-        batch_size=32,
+        batch_size=16,
         shuffle=True,
         collate_fn=collate_sequences,
         num_workers=0,
@@ -61,12 +59,12 @@ def main():
     print(f"First batch keys: {train_loader.dataset[0]}")
     val_loader = DataLoader(
         val_dataset,
-        batch_size=32,
+        batch_size=16,
         shuffle=False,
         collate_fn=collate_sequences,
         num_workers=0,
     )
-
+    
     print('DataLoaders created.')
     model = JEPA(latent_dim=160, output_dim=320, tau=0.0).to(device)
     print('JEPA model created with latent_dim=160, output_dim=320, tau=0.0.')
@@ -74,11 +72,11 @@ def main():
     print('SIGRegLoss initialized with lambda_=0.10 and sketch_dim=320.')
 
     optimizer = torch.optim.AdamW(
-        list(model.context_encoder.parameters()) + list(model.predictor.parameters()),
-        lr=1e-3,
+        model.parameters(),
+        lr=5e-4,
     )
 
-    print('AdamW optimizer created for context encoder and predictor with learning rate 1e-3.')
+    print('AdamW optimizer created for context encoder and predictor with learning rate 5e-4.')
     print('JEPA model initialized and datasets loaded.')
     jepa = train_jepa(
         jepa=model,
@@ -87,7 +85,7 @@ def main():
         loss_fn=loss_fn,
         optimizer=optimizer,
         device=device,
-        num_epochs=30,
+        num_epochs=50,
     )
     print('Training completed. Saving model...')
     os.makedirs(Path(MODEL_SAVE_PATH).parent, exist_ok=True)
